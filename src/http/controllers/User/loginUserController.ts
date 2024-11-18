@@ -14,7 +14,13 @@ export async function loginUserController(
 
     const token = await reply.jwtSign({ id: user.id, email: user.email });
 
-    return reply.status(200).send({ token });
+    return reply.status(200).send({
+      user: {
+        id: user.id,
+        email: user.email,
+      },
+      token,
+    });
   } catch (error) {
     if (error instanceof InvalidCredentialsError) {
       return reply.status(401).send({ error: error.message });
