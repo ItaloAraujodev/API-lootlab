@@ -11,6 +11,8 @@ export async function createPostController(
   try {
     const validatedData = createPostSchema.parse(req.body) as ICreatePost;
 
+    console.log(validatedData);
+
     const makeCreatePost = makeCreatePostUseCase();
     const post = await makeCreatePost.execute(validatedData);
 

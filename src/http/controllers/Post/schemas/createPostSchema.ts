@@ -29,8 +29,8 @@ const LaunchInfoSchema = z.object({
 
 // Esquema para validação de Partnership
 const PartnershipSchema = z.object({
-  name: z.string().min(1, "O nome da parceria é obrigatório"),
-  type: z.string().min(1, "O tipo da parceria é obrigatório"),
+  name: z.string().min(1, "O nome da parceria é obrigatório").optional(),
+  type: z.string().min(1, "O tipo da parceria é obrigatório").optional(),
   link_url: z.string().url("URL da parceria inválida"),
 });
 
