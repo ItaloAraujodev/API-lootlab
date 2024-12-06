@@ -18,6 +18,7 @@ export class PrismaPostRepository implements IPostRepository {
         ProjectFeatures: true,
         LaunchInfo: true,
         partnerships: true,
+        Image: true,
       },
     });
     return user;
@@ -30,6 +31,7 @@ export class PrismaPostRepository implements IPostRepository {
         ProjectFeatures: true,
         LaunchInfo: true,
         partnerships: true,
+        Image: true,
       },
     });
     return users;

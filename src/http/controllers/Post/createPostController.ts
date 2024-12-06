@@ -1,24 +1,95 @@
-import type { FastifyReply, FastifyRequest } from "fastify";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { FastifyReply, FastifyRequest } from "fastify";
 import { makeCreatePostUseCase } from "@/useCases/@factories/Post/makeCreatePostUseCase";
 import { z } from "zod";
 import { createPostSchema } from "./schemas/createPostSchema";
-import type { ICreatePost } from "@/useCases/interfaces/ICreatePost";
 
 export async function createPostController(
   req: FastifyRequest,
   reply: FastifyReply,
 ) {
   try {
-    const validatedData = createPostSchema.parse(req.body) as ICreatePost;
-    const makeCreatePost = makeCreatePostUseCase();
-    const post = await makeCreatePost.execute(validatedData);
+    const data = await req.file(); // Pega o arquivo enviado
 
-    return reply.code(201).send(post);
+    if (!data) {
+      return reply.code(400).send({
+        error: "FileMissing",
+        message: "Nenhum arquivo foi enviado.",
+      });
+    }
+
+    const fields = (data as any).fields || {};
+    if (!fields.postData || !fields.postData.value) {
+      return reply.code(400).send({
+        error: "PostDataMissing",
+        message: "O campo 'postData' está ausente ou vazio.",
+      });
+    }
+
+    const buffer = await data.toBuffer();
+
+    let jsonDate;
+    try {
+      jsonDate = JSON.parse(fields.postData.value);
+    } catch (e) {
+      return reply.code(400).send({
+        error: "InvalidPostData",
+        message: "O campo 'postData' não contém um JSON válido.",
+      });
+    }
+
+    const validateSchema = createPostSchema.parse(jsonDate);
+    const makeCreatePost = makeCreatePostUseCase();
+
+    const postData = {
+      ...validateSchema,
+      images: [buffer],
+      title: validateSchema.title,
+      market_link: validateSchema.market_link,
+      score: validateSchema.score,
+      authorId: validateSchema.authorId,
+      investment: validateSchema.investment,
+      token: validateSchema.token,
+      network: validateSchema.network,
+      comment_author: validateSchema.comment_author,
+      links: validateSchema.links.map((link: { url?: string }) => ({
+        url: link.url || "",
+      })),
+      projectFeatures: validateSchema.projectFeatures.map(
+        (feature: { title: string; isFeature?: boolean }) => ({
+          title: feature.title,
+          isFeature: feature.isFeature || false,
+        }),
+      ),
+      launchInfo: {
+        ...validateSchema.launchInfo,
+        launchDate: validateSchema.launchInfo.launchDate || "",
+        marketCap: validateSchema.launchInfo.marketCap || 0,
+        currentSupply: validateSchema.launchInfo.currentSupply || "",
+        totalSupply: validateSchema.launchInfo.totalSupply || 0,
+        privateSale: validateSchema.launchInfo.privateSale || 0,
+        publicSale: validateSchema.launchInfo.publicSale || 0,
+      },
+      partnership: validateSchema.partnership.map(
+        (partner: { type?: string; link_url?: string }) => ({
+          type: partner.type || "",
+          link_url: partner.link_url || "",
+        }),
+      ),
+    };
+
+    const response = await makeCreatePost.execute(postData);
+
+    return {
+      message: "Post criado com sucesso",
+      response,
+    };
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error("Erro de validação:", error.errors);
       return reply.code(400).send({ error: error.errors });
     }
+    console.error("Erro interno:", error);
     return reply
       .code(500)
       .send({ error: "Erro interno", message: error.message });

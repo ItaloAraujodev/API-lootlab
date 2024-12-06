@@ -4,6 +4,7 @@ import jwt from "@fastify/jwt";
 import { env } from "./env";
 import { postRouter } from "./http/controllers/Post/routes";
 import cors from "@fastify/cors";
+import fastifyMultipart from "@fastify/multipart";
 
 export const app = fastify();
 
@@ -15,5 +16,6 @@ app.register(jwt, {
   secret: env.JWT_SECRET,
 });
 
+app.register(fastifyMultipart, { limits: { fileSize: 50 * 1024 * 1024 } });
 app.register(userRouter);
 app.register(postRouter);

@@ -13,9 +13,7 @@ interface LaunchInfo {
   currentSupply: string;
   totalSupply: number;
   privateSale: number;
-  privateSaleQty: number;
   publicSale: number;
-  publicSaleQty: number;
 }
 
 interface IPartnership {
@@ -36,4 +34,6 @@ export interface ICreatePost {
   projectFeatures: IProjectFeatures[];
   launchInfo: LaunchInfo;
   partnership: IPartnership[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  images: any;
 }
