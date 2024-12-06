@@ -10,7 +10,7 @@ export async function createPostController(
 ) {
   try {
     const data = await req.file(); // Pega o arquivo enviado
-
+    console.log(data.fields);
     if (!data) {
       return reply.code(400).send({
         error: "FileMissing",
@@ -19,18 +19,19 @@ export async function createPostController(
     }
 
     const fields = (data as any).fields || {};
-    if (!fields.postData || !fields.postData.value) {
-      return reply.code(400).send({
-        error: "PostDataMissing",
-        message: "O campo 'postData' está ausente ou vazio.",
-      });
-    }
+    // if (!fields.postData || !fields.postData.value) {
+    //   return reply.code(400).send({
+    //     error: "PostDataMissing",
+    //     message: "O campo 'postData' está ausente ou vazio.",
+    //   });
+    // }
 
     const buffer = await data.toBuffer();
 
     let jsonDate;
     try {
       jsonDate = JSON.parse(fields.postData.value);
+      console.log("jsonDate", jsonDate);
     } catch (e) {
       return reply.code(400).send({
         error: "InvalidPostData",
@@ -46,7 +47,7 @@ export async function createPostController(
       images: [buffer],
       title: validateSchema.title,
       market_link: validateSchema.market_link,
-      score: validateSchema.score,
+      score: Number(validateSchema.score),
       authorId: validateSchema.authorId,
       investment: validateSchema.investment,
       token: validateSchema.token,
@@ -64,11 +65,11 @@ export async function createPostController(
       launchInfo: {
         ...validateSchema.launchInfo,
         launchDate: validateSchema.launchInfo.launchDate || "",
-        marketCap: validateSchema.launchInfo.marketCap || 0,
+        marketCap: Number(validateSchema.launchInfo.marketCap) || 0,
         currentSupply: validateSchema.launchInfo.currentSupply || "",
-        totalSupply: validateSchema.launchInfo.totalSupply || 0,
-        privateSale: validateSchema.launchInfo.privateSale || 0,
-        publicSale: validateSchema.launchInfo.publicSale || 0,
+        totalSupply: Number(validateSchema.launchInfo.totalSupply) || 0,
+        privateSale: Number(validateSchema.launchInfo.privateSale) || 0,
+        publicSale: Number(validateSchema.launchInfo.publicSale) || 0,
       },
       partnership: validateSchema.partnership.map(
         (partner: { type?: string; link_url?: string }) => ({
@@ -78,11 +79,10 @@ export async function createPostController(
       ),
     };
 
-    const response = await makeCreatePost.execute(postData);
+    await makeCreatePost.execute(postData);
 
     return {
       message: "Post criado com sucesso",
-      response,
     };
   } catch (error) {
     if (error instanceof z.ZodError) {

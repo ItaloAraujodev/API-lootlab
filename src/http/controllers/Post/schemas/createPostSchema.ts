@@ -14,17 +14,11 @@ const ProjectFeatureSchema = z.object({
 // Esquema para validação de LaunchInfo
 const LaunchInfoSchema = z.object({
   launchDate: z.string().min(1, "A data de lançamento é obrigatória"),
-  marketCap: z.number().nonnegative("O market cap deve ser um número positivo"),
+  marketCap: z.string(),
   currentSupply: z.string().min(1, "A oferta atual é obrigatória"),
-  totalSupply: z
-    .number()
-    .positive("O total supply deve ser um número positivo"),
-  privateSale: z
-    .number()
-    .nonnegative("O valor da venda privada deve ser positivo"),
-  publicSale: z
-    .number()
-    .nonnegative("O valor da venda pública deve ser positivo"),
+  totalSupply: z.string(),
+  privateSale: z.string(),
+  publicSale: z.string(),
 });
 
 // Esquema para validação de Partnership
@@ -37,7 +31,7 @@ const PartnershipSchema = z.object({
 export const createPostSchema = z.object({
   title: z.string().min(1, "O título é obrigatório"),
   market_link: z.string().url("URL de mercado inválida"),
-  score: z.number().optional(),
+  score: z.string().optional(),
   investment: z.string().optional(),
   token: z.string().min(1, "O token é obrigatório"),
   network: z.string().min(1, "A rede é obrigatória"),
