@@ -3,14 +3,15 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { makeCreatePostUseCase } from "@/useCases/@factories/Post/makeCreatePostUseCase";
 import { z } from "zod";
 import { createPostSchema } from "./schemas/createPostSchema";
+import type { ICreatePost } from "@/useCases/interfaces/ICreatePost";
 
 export async function createPostController(
   req: FastifyRequest,
   reply: FastifyReply,
 ) {
   try {
-    const data = await req.file(); // Pega o arquivo enviado
-    console.log(data.fields);
+    const data = await req.file();
+
     if (!data) {
       return reply.code(400).send({
         error: "FileMissing",
@@ -19,12 +20,6 @@ export async function createPostController(
     }
 
     const fields = (data as any).fields || {};
-    // if (!fields.postData || !fields.postData.value) {
-    //   return reply.code(400).send({
-    //     error: "PostDataMissing",
-    //     message: "O campo 'postData' está ausente ou vazio.",
-    //   });
-    // }
 
     const buffer = await data.toBuffer();
 
@@ -42,7 +37,7 @@ export async function createPostController(
     const validateSchema = createPostSchema.parse(jsonDate);
     const makeCreatePost = makeCreatePostUseCase();
 
-    const postData = {
+    const postData: ICreatePost = {
       ...validateSchema,
       images: [buffer],
       title: validateSchema.title,
@@ -54,7 +49,7 @@ export async function createPostController(
       network: validateSchema.network,
       comment_author: validateSchema.comment_author,
       links: validateSchema.links.map((link: { url?: string }) => ({
-        url: link.url || "",
+        url: link.url,
       })),
       projectFeatures: validateSchema.projectFeatures.map(
         (feature: { title: string; isFeature?: boolean }) => ({
@@ -71,10 +66,17 @@ export async function createPostController(
         privateSale: Number(validateSchema.launchInfo.privateSale) || 0,
         publicSale: Number(validateSchema.launchInfo.publicSale) || 0,
       },
+      genres: validateSchema.genres.map(
+        (genre: { id: string; name?: string }) => ({
+          id: genre.id,
+          name: genre.name,
+        }),
+      ),
+
       partnership: validateSchema.partnership.map(
         (partner: { type?: string; link_url?: string }) => ({
-          type: partner.type || "",
-          link_url: partner.link_url || "",
+          type: partner.type,
+          link_url: partner.link_url,
         }),
       ),
     };
@@ -87,7 +89,6 @@ export async function createPostController(
       console.error("Erro de validação:", error.errors);
       return reply.status(400).send({ error: error.errors });
     }
-    console.error("Erro interno:", error);
     return reply
       .status(500)
       .send({ error: "Erro interno", message: error.message });

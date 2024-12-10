@@ -21,6 +21,11 @@ interface IPartnership {
   link_url: string;
 }
 
+interface IGenre {
+  id: string;
+  name: string;
+}
+
 export interface ICreatePost {
   title: string;
   market_link: string;
@@ -34,6 +39,7 @@ export interface ICreatePost {
   projectFeatures: IProjectFeatures[];
   launchInfo: LaunchInfo;
   partnership: IPartnership[];
+  genres: IGenre[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   images: any;
 }

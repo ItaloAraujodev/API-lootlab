@@ -43,6 +43,13 @@ model Post {
   ProjectFeatures   ProjectFeatures[]
   LaunchInfo        LaunchInfo[]
   Image             Image[]
+  genres            Genre[]           @relation("PostGenres")
+}
+
+model Genre {
+  id    String @id @default(uuid())
+  name  String @unique
+  posts Post[] @relation("PostGenres")
 }
 
 model ProjectFeatures {

@@ -14,11 +14,11 @@ const ProjectFeatureSchema = z.object({
 // Esquema para validação de LaunchInfo
 const LaunchInfoSchema = z.object({
   launchDate: z.string().min(1, "A data de lançamento é obrigatória"),
-  marketCap: z.string(),
+  marketCap: z.number(),
   currentSupply: z.string().min(1, "A oferta atual é obrigatória"),
-  totalSupply: z.string(),
-  privateSale: z.string(),
-  publicSale: z.string(),
+  totalSupply: z.number(),
+  privateSale: z.number(),
+  publicSale: z.number(),
 });
 
 // Esquema para validação de Partnership
@@ -27,16 +27,21 @@ const PartnershipSchema = z.object({
   link_url: z.string().url("URL da parceria inválida"),
 });
 
+const Genre = z.object({
+  name: z.string(),
+});
+
 // Esquema principal para validação do Post
 export const createPostSchema = z.object({
   title: z.string().min(1, "O título é obrigatório"),
   market_link: z.string().url("URL de mercado inválida"),
-  score: z.string().optional(),
+  score: z.number().optional(),
   investment: z.string().optional(),
   token: z.string().min(1, "O token é obrigatório"),
   network: z.string().min(1, "A rede é obrigatória"),
   authorId: z.string().min(1, "O ID do autor é obrigatório"),
   comment_author: z.string().min(1, "O comentário do autor é obrigatório"),
+  genres: z.array(Genre),
   links: z.array(LinkSchema).optional(),
   projectFeatures: z.array(ProjectFeatureSchema).optional(),
   launchInfo: LaunchInfoSchema,

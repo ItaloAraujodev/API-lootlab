@@ -1,34 +1,55 @@
 import type { IPostRepository } from "@/repositories/interfaceRepository/IPostRepository";
 import type { ICreatePost } from "../interfaces/ICreatePost";
 import { uploadImageToR2 } from "@/lib/cloudflare";
+import type { Prisma } from "@prisma/client";
+import type { IUserRepository } from "@/repositories/interfaceRepository/IUserRepository";
+import type { IGenreRepository } from "@/repositories/interfaceRepository/IGenreRepository";
 
 export class CreatePostUseCase {
-  constructor(private readonly postRepository: IPostRepository) {}
+  constructor(
+    private readonly postRepository: IPostRepository,
+    private readonly userRepository: IUserRepository,
+    private readonly genreRepository: IGenreRepository,
+  ) {}
 
   async execute(data: ICreatePost) {
-    console.log("data.images", data.images);
-    // Apenas 6 numeros aleatórios
+    const user = await this.userRepository.findById(data.authorId);
+
+    if (!user) {
+      throw new Error("Usuário não encontrado");
+    }
+
+    const genres = await this.genreRepository.findMany();
+
+    const existingGenres = genres.filter((genre) =>
+      data.genres.some((dateGenres) => dateGenres.name === genre.name),
+    );
+
+    const newGenres = data.genres.filter(
+      (dateGenres) => !genres.some((genre) => genre.name === dateGenres.name),
+    );
+
+    const connectGenres = existingGenres.map((genre) => ({ id: genre.id }));
+
+    const createGenres = newGenres.map((genre) => ({ name: genre.name }));
+
     const randow = Math.floor(Math.random() * 1000000);
 
     const images = data.images
       ? await Promise.all(
           data.images.map(async (imageBuffer) => {
             const uniqueKey = `post-${randow}`;
-            console.log("Chave única gerada para o upload:", uniqueKey);
-
             try {
               const signedUrl = await uploadImageToR2(imageBuffer, uniqueKey);
-              console.log("URL assinada gerada:", signedUrl);
               return { url: signedUrl };
             } catch (error) {
-              console.error("Erro ao fazer upload da imagem:", error);
               throw new Error("Erro ao fazer upload da imagem");
             }
           }),
         )
       : undefined;
 
-    const createPostInput = {
+    const createPostInput: Prisma.PostUncheckedCreateInput = {
       title: data.title,
       market_link: data.market_link,
       score: data.score,
@@ -46,6 +67,10 @@ export class CreatePostUseCase {
         ? { create: data.partnership }
         : undefined,
       Image: images ? { create: images } : undefined,
+      genres: {
+        connect: connectGenres.length > 0 ? connectGenres : undefined,
+        create: createGenres.length > 0 ? createGenres : undefined,
+      },
     };
 
     const post = await this.postRepository.create(createPostInput);
