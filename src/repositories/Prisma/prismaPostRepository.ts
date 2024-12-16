@@ -16,7 +16,7 @@ export class PrismaPostRepository implements IPostRepository {
       include: {
         links: true,
         ProjectFeatures: true,
-        LaunchInfo: true,
+        launchInfo: true,
         partnerships: true,
         Image: true,
         genres: true,
@@ -31,7 +31,7 @@ export class PrismaPostRepository implements IPostRepository {
       include: {
         links: true,
         ProjectFeatures: true,
-        LaunchInfo: true,
+        launchInfo: true,
         partnerships: true,
         Image: true,
         genres: true,

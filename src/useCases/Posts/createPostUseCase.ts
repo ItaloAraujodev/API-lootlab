@@ -4,6 +4,7 @@ import { uploadImageToR2 } from "@/lib/cloudflare";
 import type { Prisma } from "@prisma/client";
 import type { IUserRepository } from "@/repositories/interfaceRepository/IUserRepository";
 import type { IGenreRepository } from "@/repositories/interfaceRepository/IGenreRepository";
+import { generateSlug } from "@/utils/generateSlug";
 
 export class CreatePostUseCase {
   constructor(
@@ -48,6 +49,7 @@ export class CreatePostUseCase {
         )
       : undefined;
 
+    const slug = generateSlug(data.title);
     const createPostInput: Prisma.PostUncheckedCreateInput = {
       title: data.title,
       market_link: data.market_link,
@@ -57,11 +59,12 @@ export class CreatePostUseCase {
       network: data.network,
       comment_author: data.comment_author,
       authorId: data.authorId,
+      slug,
       links: data.links?.length ? { create: data.links } : undefined,
       ProjectFeatures: data.projectFeatures?.length
         ? { create: data.projectFeatures }
         : undefined,
-      LaunchInfo: data.launchInfo ? { create: data.launchInfo } : undefined,
+      launchInfo: data.launchInfo ? { create: data.launchInfo } : undefined,
       partnerships: data.partnership?.length
         ? { create: data.partnership }
         : undefined,
