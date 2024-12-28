@@ -161,7 +161,7 @@ export class PostUpdateUseCase {
               },
             });
           } catch (error) {
-            console.error("Erro ao deletar imagens antigas:", error);
+            throw new Error(`Erro ao atualizar imagens: ${error.message}`);
           }
         }
 

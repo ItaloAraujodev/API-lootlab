@@ -63,10 +63,7 @@ export async function updateByIdPostController(
     const imageFiles: MultipartFile[] = [];
 
     for await (const part of parts) {
-      console.log("Processando parte:", part.fieldname, part.type);
-
       if (part.type === "file") {
-        console.log("AQUII", part.type);
         const buffer = await part.toBuffer();
         imageFiles.push({
           ...part,
@@ -77,7 +74,6 @@ export async function updateByIdPostController(
           const parsedData = JSON.parse(part.value as string);
           postData = parsedData;
         } catch (e) {
-          console.error("Erro ao parsear postData:", e);
           return reply.code(400).send({
             error: "InvalidPostData",
             message: "O campo 'postData' não contém um JSON válido.",
@@ -118,7 +114,6 @@ export async function updateByIdPostController(
           postData.Image = uploadedImages;
         }
       } catch (error) {
-        console.error("Erro no upload de imagens:", error);
         return reply.code(500).send({
           error: "ImageUploadError",
           message: "Erro ao fazer upload das imagens",
@@ -130,13 +125,10 @@ export async function updateByIdPostController(
     const cleanPostData = postData;
 
     const updatePost = makeUpdateByIdPostUseCase();
-    console.log("Enviando para useCase:", { id, postData: cleanPostData });
     const updatedPost = await updatePost.execute(id, cleanPostData);
 
     return reply.status(200).send(updatedPost);
   } catch (error) {
-    console.error("Erro completo:", error);
-
     if (error instanceof PostNotFoundError) {
       return reply.status(404).send({ error: error.message });
     }

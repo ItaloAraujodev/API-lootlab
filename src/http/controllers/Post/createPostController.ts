@@ -84,7 +84,6 @@ export async function createPostController(
     return reply.status(201).send({ message: "Post criado com sucesso." });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error("Erro de validação:", error.errors);
       return reply.status(400).send({ message: error.errors });
     } else if (error instanceof UserNotFoundError) {
       return reply.status(404).send({ message: error.message });

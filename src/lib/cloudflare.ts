@@ -48,10 +48,8 @@ export async function uploadImageToR2(
     }
 
     const publicUrl = `${env.CLOUDFLARE_PUBLIC_ENDPOINT}/${key}`;
-    console.log("Upload concluído com sucesso:", publicUrl);
     return publicUrl;
   } catch (error) {
-    console.error("Erro ao fazer upload para o R2:", error);
     throw new Error("Erro ao fazer upload da imagem: " + error.message);
   }
 }
@@ -66,10 +64,7 @@ export async function deleteImageFromR2(url: string): Promise<void> {
         Key: key,
       }),
     );
-
-    console.log("Imagem deletada com sucesso:", url);
   } catch (error) {
-    console.error("Erro ao deletar imagem do R2:", error);
     throw new Error("Erro ao deletar imagem: " + error.message);
   }
 }
