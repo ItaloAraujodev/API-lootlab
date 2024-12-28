@@ -2,6 +2,7 @@
 import { PrismaClient } from "@prisma/client";
 import { PostNotFoundError } from "../@erros/Post/PostNotFoundError";
 import { deleteImageFromR2 } from "@/lib/cloudflare";
+import { generateSlug } from "@/utils/generateSlug";
 
 interface UpdateLaunchInfoDTO {
   launchDate?: string;
@@ -78,6 +79,7 @@ export class PostUpdateUseCase {
           where: { id },
           data: {
             ...postData,
+            ...(postData.title && { slug: generateSlug(postData.title) }),
             updatedAt: new Date(),
           },
         });
