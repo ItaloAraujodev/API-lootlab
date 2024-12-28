@@ -57,7 +57,6 @@ export async function updateByIdPostController(
 ) {
   try {
     const { id } = req.params as { id: string };
-    console.log("ID recebido:", id);
 
     const parts = req.parts();
     let postData: UpdatePostDTO | null = null;
@@ -67,6 +66,7 @@ export async function updateByIdPostController(
       console.log("Processando parte:", part.fieldname, part.type);
 
       if (part.type === "file") {
+        console.log("AQUII", part.type);
         const buffer = await part.toBuffer();
         imageFiles.push({
           ...part,
@@ -76,7 +76,6 @@ export async function updateByIdPostController(
         try {
           const parsedData = JSON.parse(part.value as string);
           postData = parsedData;
-          console.log("Dados do post parseados:", postData);
         } catch (e) {
           console.error("Erro ao parsear postData:", e);
           return reply.code(400).send({
@@ -95,12 +94,11 @@ export async function updateByIdPostController(
     }
 
     if (imageFiles.length > 0) {
-      console.log(imageFiles);
       try {
         const uploadedImages = await Promise.all(
-          imageFiles.map(async (file, index) => {
-            const randow = Math.floor(Math.random() * 1000000);
-            const uniqueKey = `post-${randow}`;
+          imageFiles.map(async (file) => {
+            const random = Math.floor(Math.random() * 1000000);
+            const uniqueKey = `post-${random}`;
 
             const imageUrl = await uploadImageToR2(
               file.buffer,
@@ -108,11 +106,19 @@ export async function updateByIdPostController(
               file.mimetype,
             );
 
+            // Verifique se imageUrl é válida
+            if (!imageUrl) {
+              throw new Error("Failed to upload image");
+            }
+
             return { url: imageUrl };
           }),
         );
 
-        postData.Image = uploadedImages;
+        // Só atribua ao postData se houver imagens válidas
+        if (uploadedImages.length > 0) {
+          postData.Image = uploadedImages;
+        }
       } catch (error) {
         console.error("Erro no upload de imagens:", error);
         return reply.code(500).send({

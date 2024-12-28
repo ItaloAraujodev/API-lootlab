@@ -141,28 +141,28 @@ export class PostUpdateUseCase {
         }
 
         // 7. Atualiza Images existentes
-        if (Image?.length) {
+        if (Image?.length && Image.every((img) => img.url)) {
           try {
             await Promise.all(
               post.Image.map(async (oldImage) => {
                 await deleteImageFromR2(oldImage.url);
               }),
             );
+
+            await tx.post.update({
+              where: { id },
+              data: {
+                Image: {
+                  deleteMany: {},
+                  create: Image.map((image) => ({
+                    url: image.url,
+                  })),
+                },
+              },
+            });
           } catch (error) {
             console.error("Erro ao deletar imagens antigas:", error);
           }
-
-          await tx.post.update({
-            where: { id },
-            data: {
-              Image: {
-                deleteMany: {},
-                create: Image.map((image) => ({
-                  url: image.url,
-                })),
-              },
-            },
-          });
         }
 
         // Retorna o post atualizado com todas as relações

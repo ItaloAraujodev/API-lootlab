@@ -25,7 +25,6 @@ export async function createPostController(
     let jsonDate;
     try {
       jsonDate = JSON.parse(fields.postData.value);
-      console.log("jsonDate", jsonDate);
     } catch (e) {
       return reply.code(400).send({
         error: "InvalidPostData",
