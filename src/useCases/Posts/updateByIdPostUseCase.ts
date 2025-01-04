@@ -3,49 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { PostNotFoundError } from "../@erros/Post/PostNotFoundError";
 import { deleteImageFromR2 } from "@/lib/cloudflare";
 import { generateSlug } from "@/utils/generateSlug";
-
-interface UpdateLaunchInfoDTO {
-  launchDate?: string;
-  marketCap?: number;
-  currentSupply?: string;
-  totalSupply?: number;
-  privateSale?: number;
-  publicSale?: number;
-}
-
-interface UpdatePostDTO {
-  title?: string;
-  market_link?: string;
-  score?: number;
-  investment?: string;
-  token?: string;
-  network?: string;
-  comment_author?: string;
-  slug?: string;
-  authorId?: string;
-  genres?: Array<{
-    id: string;
-    name: string;
-  }>;
-  launchInfo?: UpdateLaunchInfoDTO;
-  projectFeatures?: Array<{
-    id: string;
-    title: string;
-    isFeature: boolean;
-  }>;
-  links?: Array<{
-    id: string;
-    url: string;
-  }>;
-  partnerships?: Array<{
-    id: string;
-    type?: string;
-    link_url: string;
-  }>;
-  Image?: Array<{
-    url: string;
-  }>;
-}
+import type { UpdatePostDTO } from "@/http/controllers/Post/interfaces/IUpdatePost";
 
 export class PostUpdateUseCase {
   constructor(private prisma: PrismaClient) {}
@@ -70,29 +28,51 @@ export class PostUpdateUseCase {
         links = undefined,
         partnerships = undefined,
         Image = undefined,
+        authorId,
         ...postData
       } = data || {};
 
       return await this.prisma.$transaction(async (tx) => {
         // 1. Atualiza o post principal
+        const postUpdateData = {
+          ...postData,
+          ...(postData.title && { slug: generateSlug(postData.title) }),
+          updatedAt: new Date(),
+        };
+
+        if (authorId) {
+          Object.assign(postUpdateData, {
+            author: {
+              connect: { id: authorId },
+            },
+          });
+        }
+
         await tx.post.update({
           where: { id },
-          data: {
-            ...postData,
-            ...(postData.title && { slug: generateSlug(postData.title) }),
-            updatedAt: new Date(),
-          },
+          data: postUpdateData,
         });
 
-        // 2. Atualiza os gêneros se fornecidos
+        // 2. Atualiza ou cria gêneros
         if (genres) {
           for (const genre of genres) {
-            await tx.genre.update({
-              where: { id: genre.id },
-              data: {
-                name: genre.name,
-              },
-            });
+            if (genre.id) {
+              await tx.genre.update({
+                where: { id: genre.id },
+                data: {
+                  name: genre.name,
+                },
+              });
+            } else if (genre.name) {
+              await tx.genre.create({
+                data: {
+                  name: genre.name,
+                  posts: {
+                    connect: { id },
+                  },
+                },
+              });
+            }
           }
         }
 
@@ -104,40 +84,76 @@ export class PostUpdateUseCase {
           });
         }
 
-        // 4. Atualiza ProjectFeatures existentes
+        // 4. Atualiza ou cria ProjectFeatures
         if (projectFeatures) {
           for (const feature of projectFeatures) {
-            await tx.projectFeatures.update({
-              where: { id: feature.id },
-              data: {
-                title: feature.title,
-                isFeature: feature.isFeature,
-              },
-            });
+            if (feature.id) {
+              await tx.projectFeatures.update({
+                where: { id: feature.id },
+                data: {
+                  title: feature.title,
+                  isFeature: feature.isFeature,
+                },
+              });
+            } else if (feature.title) {
+              await tx.projectFeatures.create({
+                data: {
+                  title: feature.title,
+                  isFeature: feature.isFeature ?? false,
+                  post: {
+                    connect: { id },
+                  },
+                },
+              });
+            }
           }
         }
 
-        // 5. Atualiza Links existentes
+        // 5. Atualiza ou cria Links
         if (links) {
           for (const link of links) {
-            await tx.link.update({
-              where: { id: link.id },
-              data: {
-                url: link.url,
-              },
-            });
+            if (link.id) {
+              await tx.link.update({
+                where: { id: link.id },
+                data: {
+                  url: link.url,
+                },
+              });
+            } else if (link.url) {
+              await tx.link.create({
+                data: {
+                  url: link.url,
+                  post: {
+                    connect: { id },
+                  },
+                },
+              });
+            }
           }
         }
-        // 6. Atualiza Partnerships existentes
+
+        // 6. Atualiza ou cria Partnerships
         if (partnerships) {
           for (const partnership of partnerships) {
-            await tx.partnership.update({
-              where: { id: partnership.id },
-              data: {
-                type: partnership.type,
-                link_url: partnership.link_url,
-              },
-            });
+            if (partnership.id) {
+              await tx.partnership.update({
+                where: { id: partnership.id },
+                data: {
+                  type: partnership.type,
+                  link_url: partnership.link_url,
+                },
+              });
+            } else if (partnership.link_url) {
+              await tx.partnership.create({
+                data: {
+                  type: partnership.type,
+                  link_url: partnership.link_url,
+                  post: {
+                    connect: { id },
+                  },
+                },
+              });
+            }
           }
         }
 
