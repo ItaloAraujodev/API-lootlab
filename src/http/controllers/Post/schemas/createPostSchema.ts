@@ -29,7 +29,7 @@ const Genre = z.object({
 
 export const createPostSchema = z.object({
   title: z.string().min(1, "O título é obrigatório"),
-
+  category: z.enum(["NFT Jogos", "NFT Artes"]),
   market_link: z.string().url("URL de mercado inválida").optional(),
   score: z.number().optional(),
   investment: z.string().optional(),

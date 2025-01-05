@@ -64,6 +64,7 @@ export class CreatePostUseCase {
     const slug = generateSlug(data.title);
     const createPostInput: Prisma.PostUncheckedCreateInput = {
       title: data.title,
+      category: data.category,
       slug,
       // Campos opcionais
       authorId: data.authorId,

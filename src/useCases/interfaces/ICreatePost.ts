@@ -28,6 +28,7 @@ interface IGenre {
 
 export interface ICreatePost {
   title: string;
+  category: string;
   market_link: string;
   score: number;
   investment: string;

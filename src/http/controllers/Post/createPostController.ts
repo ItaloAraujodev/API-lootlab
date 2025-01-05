@@ -41,6 +41,7 @@ export async function createPostController(
       ...validateSchema,
       images: [buffer],
       title: validateSchema.title,
+      category: validateSchema.category,
       market_link: validateSchema.market_link,
       score: Number(validateSchema.score),
       authorId: validateSchema.authorId,
