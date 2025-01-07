@@ -22,7 +22,7 @@ model User {
 
 model Post {
   id                String            @id @default(uuid())
-  title             String            @unique @db.VarChar(255)
+  title             String            @db.VarChar(255)
   category          String            @db.VarChar(255)
   market_link       String?           @db.VarChar(255)
   score             Int?              @default(0)

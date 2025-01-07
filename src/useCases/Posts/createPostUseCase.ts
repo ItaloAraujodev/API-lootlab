@@ -6,6 +6,7 @@ import type { IUserRepository } from "@/repositories/interfaceRepository/IUserRe
 import type { IGenreRepository } from "@/repositories/interfaceRepository/IGenreRepository";
 import { generateSlug } from "@/utils/generateSlug";
 import { TitleAlreadyExistError } from "../@erros/Post/TitleAlreadyExistError";
+import { UserNotFoundError } from "../@erros/User/UserNotFoundError";
 
 export class CreatePostUseCase {
   constructor(
@@ -19,6 +20,11 @@ export class CreatePostUseCase {
     const postByTitle = await this.postRepository.findByTitle(data.title);
     if (postByTitle) {
       throw new TitleAlreadyExistError();
+    }
+    const findUser = await this.userRepository.findById(data.authorId);
+
+    if (!findUser) {
+      throw new UserNotFoundError();
     }
 
     // Processar gêneros apenas se fornecidos
@@ -88,6 +94,7 @@ export class CreatePostUseCase {
     };
 
     const post = await this.postRepository.create(createPostInput);
+    console.log(post);
     return post;
   }
 }

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const LinkSchema = z.object({
-  url: z.string().url("URL inválida").optional(),
+  url: z.string().optional(),
 });
 
 const ProjectFeatureSchema = z.object({
@@ -30,7 +30,7 @@ const Genre = z.object({
 export const createPostSchema = z.object({
   title: z.string().min(1, "O título é obrigatório"),
   category: z.enum(["NFT Jogos", "NFT Artes"]),
-  market_link: z.string().url("URL de mercado inválida").optional(),
+  market_link: z.string().optional(),
   score: z.number().optional(),
   investment: z.string().optional(),
   token: z.string().optional(),

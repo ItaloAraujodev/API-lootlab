@@ -30,26 +30,8 @@ export function postRouter(app: FastifyTypedInstance) {
     },
     findByIdPostController,
   );
-  app.get(
-    "/v1/post",
-    {
-      schema: {
-        description: "Find many posts",
-        tags: ["Post"],
-      },
-    },
-    findManyPostsController,
-  );
-  app.get(
-    "/v1/post/slug/:slug",
-    {
-      schema: {
-        description: "Find a post by slug",
-        tags: ["Post"],
-      },
-    },
-    findBySlugPostController,
-  );
+  app.get("/v1/post", findManyPostsController);
+  app.get("/v1/post/slug/:slug", findBySlugPostController);
   // PUT
   app.put(
     "/v1/post/:id",
@@ -59,10 +41,6 @@ export function postRouter(app: FastifyTypedInstance) {
           allowedRoles: ["ADMIN", "WRITER"],
         }),
       ],
-      schema: {
-        description: "Update a post by id",
-        tags: ["Post"],
-      },
     },
     updateByIdPostController,
   );

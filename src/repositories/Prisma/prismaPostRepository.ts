@@ -5,6 +5,7 @@ import type { IPostRepository } from "../interfaceRepository/IPostRepository";
 export class PrismaPostRepository implements IPostRepository {
   async create(data: Prisma.PostUncheckedCreateInput) {
     const user = await prisma.post.create({ data });
+    console.log(user);
     return user;
   }
 
@@ -27,7 +28,7 @@ export class PrismaPostRepository implements IPostRepository {
   }
 
   async findByTitle(title: string) {
-    const post = await prisma.post.findUnique({
+    const post = await prisma.post.findFirst({
       where: {
         title,
       },
