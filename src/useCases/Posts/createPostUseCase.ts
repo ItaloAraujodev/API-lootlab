@@ -30,11 +30,10 @@ export class CreatePostUseCase {
 
     // Processar gêneros apenas se fornecidos
     // Verificar se os gêneros foram fornecidos
-    if (!data.genres || data.genres.length === 0) {
-      throw new GenresRequiredError(); // Lançar erro caso não haja gêneros
+    if (data.category !== "NFT Artes" && data.genres.length === 0) {
+      throw new GenresRequiredError();
     }
 
-    // Processar gêneros
     const genres = await this.genreRepository.findMany();
 
     const existingGenres = genres.filter((genre) =>
