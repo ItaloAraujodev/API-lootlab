@@ -1,64 +1,42 @@
-import { deleteImageFromR2 } from "@/lib/cloudflare";
-import { PostNotFoundError } from "../@erros/Post/PostNotFoundError";
-import { generateSlug } from "@/utils/generateSlug";
-import type { Prisma, PrismaClient } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import type { IPostRepository } from "@/repositories/interfaceRepository/IPostRepository";
+import { uploadImageToR2, deleteImageFromR2 } from "@/lib/cloudflare";
 
 export class PostUpdateUseCase {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private postRepository: IPostRepository) {}
 
-  async execute(id: string, data: Prisma.PostUncheckedUpdateInput) {
+  async execute(
+    id: string,
+    data: Prisma.PostUncheckedUpdateInput,
+    imageBuffers: Buffer[] = [],
+  ) {
     try {
-      const post = await this.prisma.post.findUnique({
-        where: { id },
-      });
-
-      if (!post) {
-        throw new PostNotFoundError();
+      const existingPost = await this.postRepository.findById(id);
+      if (!existingPost) {
+        throw new Error("Post não encontrado");
       }
 
-      return await this.prisma.$transaction(async (tx) => {
-        const postUpdateData: Prisma.PostUncheckedUpdateInput = {
-          ...data,
-          ...(typeof data.title === "string" && {
-            slug: generateSlug(data.title),
+      if (imageBuffers.length > 0) {
+        if (Array.isArray(existingPost.images)) {
+          await Promise.all(
+            existingPost.images.map(async (oldImage) => {
+              await deleteImageFromR2(oldImage);
+            }),
+          );
+        }
+
+        const processedImages = await Promise.all(
+          imageBuffers.map(async (buffer, index) => {
+            const uniqueKey = `post-${Date.now()}-${index}`;
+            return await uploadImageToR2(buffer, uniqueKey);
           }),
-          updatedAt: new Date(),
-          genres: data.genres || post.genres,
-          links: data.links || post.links,
-          projectFeatures: data.projectFeatures || post.projectFeatures,
-          launchInfo: data.launchInfo || post.launchInfo,
-          partnerships: data.partnerships || post.partnerships,
-          images: data.images || post.images,
-        };
+        );
 
-        if (data.authorId && typeof data.authorId === "string") {
-          postUpdateData.authorId = data.authorId;
-        }
+        data.images = processedImages as string[];
+      }
 
-        // Processar imagens: deletar as antigas e adicionar novas
-        if (Array.isArray(data.images) && data.images.length > 0) {
-          try {
-            if (Array.isArray(post.images) && post.images.length > 0) {
-              await Promise.all(
-                post.images.map(async (oldImageUrl) => {
-                  await deleteImageFromR2(oldImageUrl);
-                }),
-              );
-            }
-            postUpdateData.images = data.images;
-          } catch (error) {
-            throw new Error(`Erro ao atualizar imagens: ${error.message}`);
-          }
-        }
-
-        // Atualizar o post
-        const updatedPost = await tx.post.update({
-          where: { id },
-          data: postUpdateData,
-        });
-
-        return updatedPost;
-      });
+      // Atualizar o post no repositório
+      return await this.postRepository.updateById(id, data);
     } catch (error) {
       throw new Error(`Erro ao atualizar post: ${error.message}`);
     }
